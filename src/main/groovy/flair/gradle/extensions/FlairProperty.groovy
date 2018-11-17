@@ -27,6 +27,7 @@ enum FlairProperty
 	APP_DEFAULT_SUPPORTED_LANGUAGES( "appDefaultSupportedLanguage" ) ,
 
 	COMPILER_MAIN_CLASS( "compilerMainClass" ) ,
+	MAIN_CLASS_EXTENSION( "mainClassExtension" ) ,
 	COMPILER_OPTIONS( "compilerOptions" ) ,
 
 	PACKAGE_FILE_NAME( "packageFileName" ) ,

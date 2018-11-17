@@ -62,7 +62,7 @@ class FdtRunDebugConfigurationsStructure implements IStructure
 				}
 
 				String app = buildPathFromRoot( project.file( "${ project.buildDir.path }/${ variant.name }/app_descriptor.xml" ).path )
-				String mainClassName = ( extensionManager.getFlairProperty( variant , FlairProperty.COMPILER_MAIN_CLASS ) as String ).split( "\\." ).last( ) + ".as"
+				String mainClassName = ( extensionManager.getFlairProperty( variant , FlairProperty.COMPILER_MAIN_CLASS ) as String ).split( "\\." ).last( ) + ".mxml"
 				String mainClass
 
 				project.configurations.findAll { it.name.toLowerCase( ).contains( Config.SOURCE.name ) }.each {

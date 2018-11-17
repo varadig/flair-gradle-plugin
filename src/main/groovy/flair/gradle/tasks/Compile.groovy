@@ -14,109 +14,109 @@ import org.gradle.api.tasks.TaskAction
 /**
  * @author SamYStudiO ( contact@samystudio.net )
  */
-class Compile extends VariantTask
-{
-	protected ICli cli = new Mxmlc( )
+class Compile extends VariantTask {
+    protected ICli cli = new Mxmlc()
 
-	@InputFiles
-	Set<File> inputFiles
+    @InputFiles
+    Set<File> inputFiles
 
-	@OutputFile
-	File outputFile
+    @OutputFile
+    File outputFile
 
-	@Input
-	boolean debug
+    @Input
+    boolean debug
 
-	@Input
-	String mainClass
+    @Input
+    String mainClass
 
-	@Input
-	String compilerOptions
+    @Input
+    String mainClassExtension
 
-	@Override
-	void setVariant( Variant variant )
-	{
-		super.variant = variant
+    @Input
+    String compilerOptions
 
-		inputFiles = findInputFiles( )
-		outputFile = project.file( "${ outputVariantDir }/package/${ variant.name }.swf" )
+    @Override
+    void setVariant(Variant variant) {
+        super.variant = variant
 
-		debug = extensionManager.getFlairProperty( variant , FlairProperty.DEBUG )
-		mainClass = extensionManager.getFlairProperty( variant , FlairProperty.COMPILER_MAIN_CLASS )
-		compilerOptions = ( extensionManager.getFlairProperty( variant , FlairProperty.COMPILER_OPTIONS ) as List<String> ).join( " " )
+        inputFiles = findInputFiles()
+        outputFile = project.file("${outputVariantDir}/package/${variant.name}.swf")
 
-		description = "Compiles ${ variant.name } swf"
-	}
+        debug = extensionManager.getFlairProperty(variant, FlairProperty.DEBUG)
+        mainClass = extensionManager.getFlairProperty(variant, FlairProperty.COMPILER_MAIN_CLASS)
 
-	Compile()
-	{
-		group = TaskGroup.BUILD.name
-	}
+        mainClassExtension = (extensionManager.getFlairProperty(FlairProperty.MAIN_CLASS_EXTENSION) != null) ? extensionManager.getFlairProperty(FlairProperty.MAIN_CLASS_EXTENSION) : "as"
 
-	@SuppressWarnings( "GroovyUnusedDeclaration" )
-	@TaskAction
-	void compile()
-	{
-		cli.clearArguments( )
+        compilerOptions = (extensionManager.getFlairProperty(variant, FlairProperty.COMPILER_OPTIONS) as List<String>).join(" ")
 
-		if( variant.platform == Platform.DESKTOP ) cli.addArgument( "+configname=air" ) else cli.addArgument( "+configname=airmobile" )
+        description = "Compiles ${variant.name} swf"
+    }
 
-		if( debug ) cli.addArgument( "-debug=true" )
+    Compile() {
+        group = TaskGroup.BUILD.name
+    }
 
-		//as files
-		cli.addArgument( "-source-path+=${ project.file( "${ outputVariantDir.path }/classes" ) }" )
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    @TaskAction
+    void compile() {
+        cli.clearArguments()
 
-		//as library files
-		cli.addArgument( "-source-path+=${ project.file( "${ outputVariantDir.path }/asLibraries" ) }" )
+        if (variant.platform == Platform.DESKTOP) cli.addArgument("+configname=air") else cli.addArgument("+configname=airmobile")
 
-		//swc library files
-		cli.addArgument( "-library-path+=${ project.file( "${ outputVariantDir.path }/libraries" ) }" )
+        if (debug) cli.addArgument("-debug=true")
 
-		//ane library files
-		cli.addArgument( "-external-library-path+=${ project.file( "${ outputVariantDir.path }/extensions" ) }" )
+        //as files
+        cli.addArgument("-source-path+=${project.file("${outputVariantDir.path}/classes")}")
 
-		addConstants( )
+        //as library files
+        cli.addArgument("-source-path+=${project.file("${outputVariantDir.path}/asLibraries")}")
 
-		// custom options
-		if( compilerOptions.length(  ) ) cli.addArguments( compilerOptions.split( " " ) )
+        //swc library files
+        cli.addArgument("-library-path+=${project.file("${outputVariantDir.path}/libraries")}")
 
-		// swf output
-		cli.addArgument( "-output" )
-		cli.addArgument( project.file( "${ outputVariantDir }/package/${ variant.name }.swf" ).path )
+        //ane library files
+        cli.addArgument("-external-library-path+=${project.file("${outputVariantDir.path}/extensions")}")
 
-		// main class
-		cli.addArgument( project.file( "${ outputVariantDir }/classes/${ mainClass.split( "\\." ).join( "/" ) }.as" ).path )
+        addConstants()
 
-		cli.execute( project , variant.platform )
-	}
+        // custom options
+        if (compilerOptions.length()) cli.addArguments(compilerOptions.split(" "))
 
-	private addConstants()
-	{
-		PluginManager.getCurrentPlatforms( project ).each {
+        // swf output
+        cli.addArgument("-output")
+        cli.addArgument(project.file("${outputVariantDir}/package/${variant.name}.swf").path)
 
-			cli.addArgument( "-define+=PLATFORM::${ it.name.toUpperCase( ) },${ it == variant.platform }" )
-		}
+        // main class
+        cli.addArgument(project.file("${outputVariantDir}/classes/${mainClass.split("\\.").join("/")}.${mainClassExtension}").path)
 
-		extensionManager.allActivePlatformProductFlavors.each {
+        cli.execute(project, variant.platform)
+    }
 
-			cli.addArgument( "-define+=PRODUCT_FLAVOR::${ it.toUpperCase( ) },${ variant.productFlavors.indexOf( it ) >= 0 }" )
-		}
+    private addConstants() {
+        PluginManager.getCurrentPlatforms(project).each {
 
-		extensionManager.allActivePlatformBuildTypes.each {
+            cli.addArgument("-define+=PLATFORM::${it.name.toUpperCase()},${it == variant.platform}")
+        }
 
-			cli.addArgument( "-define+=BUILD_TYPE::${ it.toUpperCase( ) },${ it == variant.buildType }" )
-		}
-	}
+        extensionManager.allActivePlatformProductFlavors.each {
 
-	private List<File> findInputFiles()
-	{
-		List<File> list = new ArrayList<File>( )
+            cli.addArgument("-define+=PRODUCT_FLAVOR::${it.toUpperCase()},${variant.productFlavors.indexOf(it) >= 0}")
+        }
 
-		list.add( project.file( "${ outputVariantDir.path }/classes" ) )
-		list.add( project.file( "${ outputVariantDir.path }/libraries" ) )
-		list.add( project.file( "${ outputVariantDir.path }/asLibraries" ) )
-		list.add( project.file( "${ outputVariantDir.path }/extensions" ) )
+        extensionManager.allActivePlatformBuildTypes.each {
 
-		return list
-	}
+            cli.addArgument("-define+=BUILD_TYPE::${it.toUpperCase()},${it == variant.buildType}")
+        }
+    }
+
+    private List<File> findInputFiles() {
+        List<File> list = new ArrayList<File>()
+
+        list.add(project.file("${outputVariantDir.path}/classes"))
+        list.add(project.file("${outputVariantDir.path}/libraries"))
+        list.add(project.file("${outputVariantDir.path}/asLibraries"))
+        list.add(project.file("${outputVariantDir.path}/extensions"))
+
+        return list
+    }
 }
